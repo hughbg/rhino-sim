@@ -1,0 +1,14 @@
+NF_HERA_Vivaldi_power_beam.fits: 
+    name: vivaldi
+
+rhino_matlab1.beamfits: 
+    name: rhino1
+    build_config:
+        freq_start: 60000000
+        freq_end: 88000000
+        nfreq: 280
+        values_file: matlab_horn_351MHz.dat
+        az_file: matlab_horn_351MHz_az.dat
+        za_file: matlab_horn_351MHz_el.dat
+
+
