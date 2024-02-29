@@ -15,7 +15,6 @@ with open(build_config["za_file"], "r") as f:
     za = np.deg2rad(np.array(f.readline()[:-1].split(","), dtype=float))
 
 values = np.loadtxt(build_config["values_file"])
-values = 10**(values/10)
 
 assert values.shape[0] == za.size and values.shape[1] == az.size, "data and axes don't match in size"
 
@@ -29,9 +28,10 @@ uvb.Nfreqs = build_config["nfreq"]
 uvb.antenna_type = "simple"
 uvb.bandpass_array = np.array([np.ones(build_config["nfreq"])])
 uvb.beam_type = "power"
-uvb.data_array = np.zeros((1, 1, 1, build_config["nfreq"], za.size, az.size))      # (Naxes_vec, 1, Nfeeds or Npols, Nfreqs, Naxes2, Naxes1)
+uvb.data_array = np.zeros((1, 1, 2, build_config["nfreq"], za.size, az.size))      # (Naxes_vec, 1, Nfeeds or Npols, Nfreqs, Naxes2, Naxes1)
 for i in range(build_config["nfreq"]):
     uvb.data_array[0, 0, 0, i] = values
+    uvb.data_array[0, 0, 1, i] = values
 uvb.data_normalization = "physical"
 uvb.feed_name = "RHINO"
 uvb.feed_version = "1.0"
@@ -49,7 +49,7 @@ uvb.Naxes2 = za.size
 #uvb.Nelements None               Only reuired for phased array
 #uvb.Nfeeds None                  Not required if beam_type is “power”.
 #uvb.Npixels None                 Only required if pixel_coordinate_system is ‘healpix’.
-uvb.Npols = 1
+uvb.Npols = 2
 uvb.Nspws = 1
 uvb.axis1_array = az
 uvb.axis2_array = za
@@ -68,7 +68,7 @@ uvb.mismatch_array = None
 #uvb.nside None                   Only required if pixel_coordinate_system is ‘healpix’.
 #uvb.ordering None                Only required if pixel_coordinate_system is “healpix”.
 #uvb.pixel_array None             Only required if pixel_coordinate_system is “healpix”.
-uvb.polarization_array = [-5]
+uvb.polarization_array = np.array([-5, -6])
 uvb.receiver_temperature_array = None
 uvb.reference_impedance = None
 uvb.s_parameters = None
@@ -79,4 +79,4 @@ uvb.x_orientation = "east"
 uvb.interpolation_function = "az_za_simple"
 
 
-uvb.write_beamfits(sys.argv[1], run_check=True, check_extra=True, run_check_acceptability=True, check_auto_power=True, clobber=True)
+uvb.write_beamfits(beams[sys.argv[1]]["file"], run_check=True, check_extra=True, run_check_acceptability=True, check_auto_power=True, clobber=True)

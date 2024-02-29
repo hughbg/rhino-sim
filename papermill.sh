@@ -2,9 +2,9 @@
 #SBATCH --job-name='papermill'
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
-#SBATCH --mem=28GB
+#SBATCH --mem=232GB
 #SBATCH --output=papermill-%j.log
-#SBATCH --time=4:00:00
+#SBATCH --time=24:00:00
 
 
 if [ -z $1 ]

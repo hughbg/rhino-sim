@@ -1,14 +1,41 @@
-NF_HERA_Vivaldi_power_beam.fits: 
-    name: vivaldi
+vivaldi: 
+    type: uvbeam
+    file: NF_HERA_Vivaldi_power_beam.fits
 
-rhino_matlab1.beamfits: 
-    name: rhino1
-    build_config:
+vivaldi_sparse: 
+    type: sparse
+    file: NF_HERA_Vivaldi_power_beam.fits
+    params:
+        nmax: 80
+        mmodes:
+            start: -45
+            end: 46
+        Nfeeds: 2
+
+rhino1: 
+    type: uvbeam
+    file: rhino_matlab1.beamfits
+    build_config:                # for make_power_beam.py, not used by notebooks
         freq_start: 60000000
         freq_end: 88000000
         nfreq: 280
-        values_file: matlab_horn_351MHz.dat
-        az_file: matlab_horn_351MHz_az.dat
-        za_file: matlab_horn_351MHz_el.dat
+        values_file: matlab_horn_351MHz_rot.dat
+        az_file: matlab_horn_351MHz_rot_az.dat
+        za_file: matlab_horn_351MHz_rot_za.dat
 
+rhino1_sparse: 
+    type: sparse
+    file: rhino_matlab1.beamfits
+    params:
+        nmax: 80
+        mmodes:
+            start: -45
+            end: 46
+        Nfeeds: 2
+
+airy: 
+    name: airy
+    type: analytic
+    params:
+        diameter: 8
 

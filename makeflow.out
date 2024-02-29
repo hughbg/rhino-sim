@@ -1,6 +1,0 @@
-sed s/BEAM_FILE/NF_HERA_Vivaldi_power_beam.fits/ Global_signal_simulation.ipynb > vivaldi_sim.ipynb
-python run_and_wait.py  papermill.sh vivaldi_sim.ipynb
-Submitted batch job 8405977 papermill.sh vivaldi_sim.ipynb
-Submitted job 8405977 at 2024-01-26 21:57:18.074204
-8405977 exited queue status failed at 2024-01-26 21:59:18.230645
-make: *** [Makefile:5: sim_global_vivaldi_refl.uvh5] Error 1

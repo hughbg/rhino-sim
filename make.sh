@@ -1,1 +1,1 @@
-make all > makeflow.out 2>&1
+make -j 6 all > makeflow.out 2>&1
