@@ -3,7 +3,7 @@ import numpy as np
 from scipy.special import jn, jn_zeros
 from scipy.linalg import solve, lstsq
 from scipy.interpolate import interp1d
-
+#import cProfile
 
 class sparse_beam(UVBeam):
     
@@ -123,8 +123,7 @@ class sparse_beam(UVBeam):
         """
         Compute the factored design matrix that maps from Fourier-Bessel 
         coefficients to pixel centers on the sky. Assumes az/za coordinates,
-        AND uniform sampling in azimuth. (HG - this uniform sampling is a problem). 
-        Full design matrix is the tensor 
+        AND uniform sampling in azimuth. Full design matrix is the tensor 
         product of these two factors.
                 
         Returns:
@@ -388,7 +387,10 @@ class sparse_beam(UVBeam):
         if za_array is None:
             raise ValueError("Must specify a zenith-angle array.")
 
+
         bess_matr, trig_matr = self.get_dmatr_interp(az_array, za_array)
+        #cProfile.runctx('self.get_dmatr_interp(az_array, za_array)', globals(), locals())
+
 
         if sparse_fit:
             num_modes = fit_coeffs.shape[-1]
@@ -402,6 +404,7 @@ class sparse_beam(UVBeam):
             if freq_array is None:
                 bess_fits = self.bess_fits
             else:
+                """
                 # Hamdles 1 freq and a range of freq
                 assert self.freq_array[0, 0] <= freq_array[0] and freq_array[-1] <= self.freq_array[0, -1], "sparse beam can't interpolate frequency outside the beam frequency range"
 
@@ -413,11 +416,11 @@ class sparse_beam(UVBeam):
 
                 bess_fits = self.bess_fits[..., idx_start:idx_finish+1]
                 # This could result in the number of freq returned not matching the number of freq requested
-                 
-            beam_vals = np.tensordot(trig_matr[:, np.newaxis] * bess_matr[:, :, np.newaxis], bess_fits, axes=2).transpose(1, 2, 3, 4, 0)
-
+                """
+            beam_vals = np.tensordot(trig_matr[:, np.newaxis] * bess_matr[:, :, np.newaxis], self.bess_fits, axes=2).transpose(1, 2, 3, 4, 0)
+            #cProfile.runctx('beam_vals = np.tensordot(trig_matr[:, np.newaxis] * bess_matr[:, :, np.newaxis], self.bess_fits, axes=2).transpose(1, 2, 3, 4, 0)', globals(), locals())
         if self.beam_type == "power":
             beam_vals = np.abs(beam_vals)
-            
+
         return beam_vals, None      # uvbeam returns a 2-tuple
 
