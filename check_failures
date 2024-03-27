@@ -1,0 +1,14 @@
+echo "makeflow.out --------------------------------------------"
+grep failed makeflow.out
+
+echo "Jobs ----------------------------------------------------"
+jobs=`grep completed makeflow.out | awk '{if ($10 == "completed") print $9}'`
+for j in $jobs
+do
+  if egrep -i -l '(error|failed)' *${j}*.log > /dev/null 2>&1
+  then
+  
+    echo "`ls *${j}*.log` -----"
+    egrep -i '(error|failed)' *${j}*.log
+    
+  fi

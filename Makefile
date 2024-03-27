@@ -16,8 +16,8 @@ vivaldi_calibration.ipynb: $(CAL_NOTEBOOK) sim_global_vivaldi_power_refl.uvh5
 	$(BATCH) papermill.sh vivaldi_calibration.ipynb
 
 # ------
-rhino_matlab1.beamfits: make_power_beam.py matlab_horn_351MHz_rot.dat matlab_horn_351MHz_rot_az.dat matlab_horn_351MHz_rot_za.dat beams.yaml
-	python make_power_beam.py rhino1
+rhino_matlab1.beamfits: process_matlab.py matlab_horn_351MHz_rot.dat matlab_horn_351MHz_rot_az.dat matlab_horn_351MHz_rot_za.dat beams.yaml
+	python process_matlab.py rhino1
 
 sim_global_rhino1_refl.uvh5: $(SIM_NOTEBOOK) rhino_matlab1.beamfits beams.yaml
 	sed s/BEAM_SPEC/rhino1/ $(SIM_NOTEBOOK) > rhino_sim.ipynb
