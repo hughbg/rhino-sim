@@ -2,6 +2,10 @@ vivaldi:
     type: uvbeam
     file: NF_HERA_Vivaldi_power_beam.fits
 
+vivaldi_efield:
+    type: uvbeam
+    file: NF_HERA_Vivaldi_efield_beam.fits
+
 vivaldi_sparse: 
     type: sparse
     file: NF_HERA_Vivaldi_power_beam.fits
@@ -14,7 +18,7 @@ vivaldi_sparse:
 
 rhino1: 
     type: uvbeam
-    file: rhino_matlab1.beamfits
+    file: rhino1.beamfits
     build_config:                # for process_matlab.py, not used by notebooks
         freq_start: 60000000
         freq_end: 88000000
@@ -43,7 +47,7 @@ horn_uan:
         
 rhino1_sparse: 
     type: sparse
-    file: rhino_matlab1.beamfits
+    file: rhino1.beamfits
     params:
         nmax: 80
         mmodes:

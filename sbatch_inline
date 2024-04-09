@@ -1,0 +1,11 @@
+#!/bin/sh
+
+# Make it look like sbatch
+
+# This is the pid of the subprocess that will be created
+pid=$$
+pid=$((pid+1))
+
+echo "Submitted batch job $pid"       
+sh $* >> ${1}_${pid}.log  2>&1  &
+

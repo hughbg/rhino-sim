@@ -78,5 +78,4 @@ uvb.x_orientation = "east"
 # This one isn't in the docs but I can't run vis_cpu without it
 uvb.interpolation_function = "az_za_simple"
 
-
 uvb.write_beamfits(beams[sys.argv[1]]["file"], run_check=True, check_extra=True, run_check_acceptability=True, check_auto_power=True, clobber=True)

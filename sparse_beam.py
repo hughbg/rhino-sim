@@ -475,9 +475,13 @@ class FreqTimeCache:
     def __init__(self, all_freq, freq_chunk_size, master_beam):
         self.all_freq = all_freq
         self.freq_chunk_size = freq_chunk_size
-        self.times = []              # At each time, there are several frequencies passed to interp(). This is the results - the data.
         self.master_beam = master_beam
+        self.reset()
+
+    def reset(self):
+        self.times = []              # At each time, there are several frequencies passed to interp(). This is the results - the data.
         self.beam = None
+        
 
     def fast_interp(self, az_array, za_array):
         # Use the functions in sparse beam
@@ -508,7 +512,7 @@ class FreqTimeCache:
             assert index != -1, "freq is not in the list supplied at the start"
            
 
-            # Now actually get the data
+            # Now actually get the data. Not just this specific frequency but a lot more we will cache
             self.beam = self.master_beam.interp(freq_array=self.all_freq[index:index+self.freq_chunk_size], new_object=True, run_check=False)
             #print("Load1", len(self.beam.freq_array[0]), "freq", self.beam.freq_array[0][0], "-", self.beam.freq_array[0][-1], "Time", time)
 
@@ -530,7 +534,7 @@ class FreqTimeCache:
             return interp_vals[:, :, :, 0:1, :], None   # Return just requested frequency
 
         else:
-            freq_index = find(self.beam.freq_array[0], freq)
+            freq_index = find(self.beam.freq_array[0], freq)     # Remember beam has multiple freqs according to chunk
             if freq_index >= 0:
                 # We have the frequency, but check the time
                 if time < len(self.times):
@@ -560,8 +564,7 @@ class FreqTimeCache:
                 assert index_next != -1 and time == 0, "something wrong with the sequencing"
 
                 # Reset some things and then go around to get the cache reloaded
-                self.beam = None     
-                self.times = []             
+                self.reset()          
 
                 return self.fetch(freq, time, **kwargs)
 
@@ -577,7 +580,7 @@ class FreqTimeCache:
 class sim_sparse_beam:
     def __init__(self, *args, **kwargs):
 
-        self.reset_indexes()
+
         self.in_sim = False
 
         # Extract the params we want and strip them out of the kwargs
@@ -598,18 +601,20 @@ class sim_sparse_beam:
         self.beam_type = self.master_beam.beam_type
         self.polarization_array = self.master_beam.polarization_array
 
-
-        self.cache = FreqTimeCache(self.interp_freq_array, self.interp_freq_chunk, self.master_beam)
-
-
-    def reset_indexes(self):
+        self.reset()
+        
+    def reset(self):
         self.prev_freq = -1
         self.time_index = -1
-        
+        self.cache = FreqTimeCache(self.interp_freq_array, self.interp_freq_chunk, self.master_beam)
 
     def sim_start(self):
-        self.reset_indexes()
-        self.in_sim = True        
+        self.reset()
+        self.in_sim = True    
+        
+    def sim_end(self):
+        self.cache = None
+        self.in_sim = False        
 
     def interp(self, *args, **kwargs):
         
@@ -639,7 +644,7 @@ class sim_sparse_beam:
         return self.cache.fetch(freq, self.time_index, **kwargs)
 
     def peak_normalize(self):
-        # sparse beam is peak normalize when initialized
+        # sparse beam is peak normalized when initialized
         pass
         
         
