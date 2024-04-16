@@ -5,7 +5,7 @@ Pipeline for the RHINO 21cm global signal experiment. Basic operation is to run 
 
 There are a few entities in this system that need to be understood: beams, beam specifications, notebooks, batch system for running notebooks.
 
-The system is complex because it is designed to be automated as a batch system from a single "make" command. If you just want to run run simulation and calibration in Jupyter, see the **Notebooks** section below.
+The system is complex because it is designed to be automated as a batch system from a single "make" command. If you just want to run  simulation and calibration in Jupyter, see the **Notebooks** section below.
 
 ## Beams
 
