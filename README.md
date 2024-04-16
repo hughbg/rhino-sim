@@ -15,9 +15,9 @@ There are several types of beams known to the system:
 - Text file beam. These are files produced by external packages like Matlab or [XFdtd](https://www.remcom.com/applications/antenna-simulation-design-software). They cannot be used unless they are converted to a UVBeam/FITS, by one of the `process_*.py` scripts.
 - sparse_beam. These do not exist in a file, they only exist as a Python object. In a Python script or notebook they are created from a UVBeam/FITS.
 - sim_sparse_beam. These do not exist in a file, they only exist as a Python object. They are created from a sparse_beam. This sim_sparse_beam can only be used within a vis_cpu simulation.
-- pyuvsim [AnalyticBeam](https://github.com/RadioAstronomySoftwareGroup/pyuvsim/blob/main/src/pyuvsim/analyticbeam.py). This is a simple beam type and it can be used for testing. You can have a Gaussian beam, airy beam, uniform beam. They are a Python object, and don't 
+- pyuvsim [AnalyticBeam](https://github.com/RadioAstronomySoftwareGroup/pyuvsim/blob/main/src/pyuvsim/analyticbeam.py). This is a simple beam type and it can be used for testing. You can have a Gaussian beam, airy beam, uniform beam. They are a Python object only.
 
-UVBeams can be power beams or efield beams. Both beams can be used in simulations, but a sparse beam can only be created from a power beam. The type of UVBeam is indicated in the UVBeam object by the `beam_type` attribute. 
+UVBeams can be power beams or efield beams. Both beams can be used in simulations, but a sparse beam can only be created from a power beam. The type of UVBeam is indicated in the UVBeam Python object by the `beam_type` attribute. 
 
 The purpose of the `sim_sparse_beam` is to do some pre-calculation and caching, which speeds up the use of the sparse beam. A sparse beam could be used by itself in a simulation, but it will be very slow. A sparse beam can be used directly in other notebooks and scripts that are not running simulations, for example the beam plotting notebook `plot_beam.ipynb`.
 
@@ -87,15 +87,15 @@ From these templates, notebooks should be generated that are fixed to a particul
     make MYBEAM_cal.ipynb
     ```
     If `make` says "up to date" then the files already exist.
-4. You can now load those two notebooks into Jupyter and run them in Jupyter. Run the sim notebook and then the cal notebook.
+4. You can now load the two notebooks from 3. into Jupyter and run them in Jupyter. Run the sim notebook and then the cal notebook.
 
 Other notebooks can be run as they are.
 
 ## Batch system
 
-A simulation and subsequent calibration can be run for each beams by running the command `make -k`in a shell (with conda activated). You must have commands in the Makefile and an entry in beams.yaml for every beam you want to run. See the existing Makefile for examples. Also add your beam to the "all:" make rule.
+A simulation and subsequent calibration can be run for all beams by running the command `make -k` in a shell (with conda activated). You must have commands in the Makefile and an entry in beams.yaml for every beam you want to run. See the existing Makefile for examples. Also add your beam to the "all:" make rule.
 
-The notebooks are run *outside* Jupyter. This done using the papermill package, which must be installed into your conda environment using pip. For each beam called BEAM the result notebooks will be `BEAM_sim,ipynb` and `BEAM_cal.ipynb`.
+The notebooks are run *outside* Jupyter. This done using the papermill package, which must be installed into your conda environment using pip. For each beam called BEAM the result notebooks will be `BEAM_sim.ipynb` and `BEAM_cal.ipynb`.
 
 If you are running on a cluster that has the SLURM batch system installed, then the notebooks will be run as SLURM jobs through the queueing system. If you're not running on a SLURM cluster, the notebooks will be run as Linux processes. In either case, there will be log files produced, with the extension `.log`. The file `makeflow.out` will contain a log of what the batch system is doing, and is updated as the batch system runs. It will also contain a report as to whether each job or process exited with success or failure.  The jobs/processes are given a unique number in makeflow.log and the name of the logfile for each job/process will contain that number.
 
