@@ -1,11 +1,11 @@
 
 # rhino-sim
 
-Pipeline for the RHINO 21cm global signal experiment. Basic operation is to run a simulation notebook to generate an observation of 21 cm using PHINO. Then run the simulation result through a calibration and analysis notebook.
+Pipeline for the RHINO 21cm global signal experiment. Basic operation is to run a simulation notebook to generate an observation of 21 cm using RHINO. Then run the simulation result through a calibration and analysis notebook.
 
 There are a few entities in this system that need to be understood: beams, beam specifications, notebooks, batch system for running notebooks.
 
-The system is complex because it is designed to be automated as a batch system from a single "make" command. To run simulation and calibration in Jupyter notebooks, see the **Notebooks** section below.
+The system is complex because it is designed to be automated as a batch system from a single "make" command. If you just want to run run simulation and calibration in Jupyter, see the **Notebooks** section below.
 
 ## Beams
 
@@ -72,7 +72,7 @@ The beam will be loaded from the FITS file but is to be converted to a sparse be
 
 ## Notebooks
 
-There are two important notebooks, they run a simulation, and then a calibration of the simulation. The notebooks exist as templates and shouldn't be used by themselves. The notebooks are:
+There are two important notebooks, one to run a simulation, and another to run a calibration of the simulation. The notebooks exist as templates and shouldn't be used by themselves. The notebooks are:
 
 - Global_signal_simulation.ipynb
 - Global_signal_calibration.ipynb OR Global_signal_calibration_new.ipynb
