@@ -3,7 +3,7 @@ BATCH = python run_and_wait.py
 SIM_NOTEBOOK = Global_signal_simulation.ipynb 
 CAL_NOTEBOOK = Global_signal_calibration.ipynb
 
-all: vivaldi_cal.done vivaldi_efield_cal.done rhino1_cal.done airy_cal.done vivaldi_sparse_cal.done rhino1_sparse_cal.done
+all: vivaldi_cal.milled vivaldi_efield_cal.milled rhino1_cal.milled airy_cal.milled vivaldi_sparse_cal.milled rhino1_sparse_cal.milled
 
 # ------
 # Make the notebooks for a particular beam
@@ -18,18 +18,18 @@ all: vivaldi_cal.done vivaldi_efield_cal.done rhino1_cal.done airy_cal.done viva
 
 # ------ Vivali beam
 
-sim_global_vivaldi_power_refl.uvh5: beams.yaml NF_HERA_Vivaldi_power_beam.fits vivaldi_sim.ipynb
+vivaldi_sim.milled: beams.yaml NF_HERA_Vivaldi_power_beam.fits vivaldi_sim.ipynb
 	$(BATCH) papermill.sh vivaldi_sim.ipynb
 
-vivaldi_cal.done: vivaldi_cal.ipynb sim_global_vivaldi_power_refl.uvh5
+vivaldi_cal.milled: vivaldi_cal.ipynb vivaldi_sim.milled
 	$(BATCH) papermill.sh vivaldi_cal.ipynb
 
 # ------ Vivaldi efield beam
 
-sim_global_vivaldi_efield_refl.uvh5: beams.yaml NF_HERA_Vivaldi_efield_beam.fits vivaldi_efield_sim.ipynb
+vivaldi_efield_sim.milled: beams.yaml NF_HERA_Vivaldi_efield_beam.fits vivaldi_efield_sim.ipynb
 	$(BATCH) papermill.sh vivaldi_efield_sim.ipynb
 
-vivaldi_efield_cal.done: vivaldi_efield_cal.ipynb sim_global_vivaldi_efield_refl.uvh5
+vivaldi_efield_cal.milled: vivaldi_efield_cal.ipynb vivaldi_efield_sim.milled
 	$(BATCH) papermill.sh vivaldi_efield_cal.ipynb
 
 
@@ -38,35 +38,35 @@ vivaldi_efield_cal.done: vivaldi_efield_cal.ipynb sim_global_vivaldi_efield_refl
 rhino1.beamfits: process_matlab.py matlab_horn_351MHz_rot.dat matlab_horn_351MHz_rot_az.dat matlab_horn_351MHz_rot_za.dat beams.yaml
 	python process_matlab.py rhino1
 
-sim_global_rhino1_refl.uvh5: beams.yaml rhino1.beamfits rhino1_sim.ipynb
+rhino1_sim.milled: beams.yaml rhino1.beamfits rhino1_sim.ipynb
 	$(BATCH) papermill.sh rhino1_sim.ipynb
 
-rhino1_cal.done: rhino1_cal.ipynb sim_global_rhino1_refl.uvh5
+rhino1_cal.milled: rhino1_cal.ipynb rhino1_sim.milled
 	$(BATCH) papermill.sh rhino1_cal.ipynb
 
 # ------ Airy beam. This is an Analytic beam defined in pyuvsim
 
-sim_global_airy_refl.uvh5: beams.yaml airy_sim.ipynb
+airy_sim.milled: beams.yaml airy_sim.ipynb
 	$(BATCH) papermill.sh airy_sim.ipynb
 
-airy_cal.done: airy_cal.ipynb sim_global_airy_refl.uvh5
+airy_cal.milled: airy_cal.ipynb airy_sim.milled
 	$(BATCH) papermill.sh airy_cal.ipynb
 
 # ------ Vivaldi sparse beam
 
-sim_global_vivaldi_sparse_refl.uvh5: beams.yaml NF_HERA_Vivaldi_power_beam.fits vivaldi_sparse_sim.ipynb
+vivaldi_sparse_sim.milled: beams.yaml NF_HERA_Vivaldi_power_beam.fits vivaldi_sparse_sim.ipynb
 	$(BATCH) papermill.sh vivaldi_sparse_sim.ipynb
 
-vivaldi_sparse_cal.done: vivaldi_sparse_cal.ipynb sim_global_vivaldi_sparse_refl.uvh5
+vivaldi_sparse_cal.milled: vivaldi_sparse_cal.ipynb vivaldi_sparse_sim.milled
 	$(BATCH) papermill.sh vivaldi_sparse_cal.ipynb
 
 
 # ------ RHINO sparse beam
 
 
-sim_global_rhino1_sparse_refl.uvh5: beams.yaml rhino1.beamfits rhino1_sparse_sim.ipynb
+rhino1_sparse_sim.milled: beams.yaml rhino1.beamfits rhino1_sparse_sim.ipynb
 	$(BATCH) papermill.sh rhino1_sparse_sim.ipynb
 
-rhino1_sparse_cal.done: rhino1_sparse_cal.ipynb sim_global_rhino1_sparse_refl.uvh5
+rhino1_sparse_cal.milled: rhino1_sparse_cal.ipynb rhino1_sparse_sim.milled
 	$(BATCH) papermill.sh rhino1_sparse_cal.ipynb
 

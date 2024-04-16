@@ -5,7 +5,7 @@ from datetime import datetime
 import subprocess
 
 def sbatch_available():
-    result = subprocess.run(['which', 'sbatch'], stdout=subprocess.PIPE)
+    result = subprocess.run(['which', 'sbatch'], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
     return len(result.stdout) > 0
     
 def run_command(command):
