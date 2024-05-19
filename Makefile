@@ -6,7 +6,8 @@ CAL_NOTEBOOK = Global_signal_calibration.ipynb
 all: vivaldi_cal.milled vivaldi_efield_cal.milled rhino1_cal.milled airy_cal.milled vivaldi_sparse_cal.milled rhino1_sparse_cal.milled
 
 # ------
-# Make the notebooks for a particular beam
+# Make the notebooks for a particular beam. This doesn't automatically detect what beams
+# are in beams.yaml so you have to add what you want.
 
 %_sim.ipynb: $(SIM_NOTEBOOK)
 	python check_beam.py $*

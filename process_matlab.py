@@ -2,6 +2,8 @@ import numpy as np
 from pyuvdata import UVBeam
 import yaml, sys
 
+dB_to_lin = lambda db: 10**(db/10)
+
 
 with open('beams.yaml', 'r') as file:
     beams = yaml.safe_load(file)
@@ -18,6 +20,8 @@ values = np.loadtxt(build_config["values_file"])
 
 assert values.shape[0] == za.size and values.shape[1] == az.size, "data and axes don't match in size"
 
+if "dB" in build_config and build_config["dB"]:
+    values = dB_to_lin(values)
 
 # Now start filling the UVBeam
 

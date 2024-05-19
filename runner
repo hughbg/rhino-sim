@@ -1,0 +1,6 @@
+#!/bin/sh
+
+pid=$$
+
+exec sh $* > ${1}_${pid}.log  2>&1  
+

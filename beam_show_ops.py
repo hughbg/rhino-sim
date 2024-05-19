@@ -6,6 +6,15 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
 
 def print_UVBeam(uvb):
+    """
+    Print all the header information from a UVBeam.
+    
+    Parameters
+    ----------
+    uvb : UVBeam
+        The beam to print
+
+    """
     print("Naxes_vec", uvb.Naxes_vec)
     print("Nfreqs", uvb.Nfreqs)
     print("antenna_type", uvb.antenna_type)
@@ -80,10 +89,22 @@ def print_UVBeam(uvb):
 
 
 def plot_beam(beam, freq, name, feed=0, save_to=None):
-    # How to plot an efield beam is debatable. I'm combining the two axes by squaring and summing, which
-    # is what is done in vis_cpu when autocorrelations are calculated (although source intensity is multiplied in).
-    # For the Vivaldi beam this comes out the same as the power beam but I don't know if that generalizes.
-    # I think it applies to efield beams with 2 orthogonal axes.
+    """
+    Plot a beam. The plot is the beam projected flat onto the ground when looking from above.
+    Colors indicate the beam values.
+
+    Parameters
+    ----------
+    beam : Must be a beam that has an interp() function like UVBeam.
+        The beam to plot.
+    freq : float
+        The frequency at which to plot the beam.
+    feed: int
+        See the UVBeam manual. Effectively the same as pols, i.e. X, Y, so can be 0, 1
+    save_to: str
+        A file name to save the plot to.
+
+    """
     
     to_power = lambda b : b[0]*np.conj(b[0])+b[1]*np.conj(b[1])
                
@@ -151,15 +172,42 @@ def plot_beam(beam, freq, name, feed=0, save_to=None):
         plt.savefig(save_to)
          
 def load_beam(beam_cfg, convert_sparse_to_sim_sparse=False, interp_freq_array=None, interp_freq_chunk=None):
-    # beam_spec is a dictionary for a beam, from beams.yaml
-    # convert_sparse_to_sim_sparse. ONLY use this for a beam being used by vis_cpu
+    """
+    Load a beam, as per its specification in beams.yaml
 
+    Parameters
+    ----------
+    beam_cfg : dict
+        A dictionary containing beam information such as file name, beam type, parameters etc. Obtained from
+        beams.yaml for a particular beam. 
+    convert_sparse_to_sim_sparse : bool
+        If True, and the beam is a sparse_beam, then convert it to a sim sparse_beam
+    interp_freq_array: ndarray
+        Must be supplied if the beam is a sparse_beam and convert_sparse_to_sim_sparse is True.
+        An array that contains all the frequencies that will be used within a vis_cpu simulation using
+        this beam. In order.
+    interp_freq_chunk: int
+        Must be supplied if the beam is a sparse_beam and convert_sparse_to_sim_sparse is True.
+        Specifies how many frequencies the sim_sparse_beam should pre-calculate and cache when the beam
+        is used in a vis_cpu simulation.
+
+    Returns
+    -------
+    A beam object of the appropriate type
+    """
+  
     if beam_cfg["type"] == "uvbeam": 
         uvb = UVBeam()
         uvb.read_beamfits(beam_cfg["file"])
-        if uvb.interpolation_function is None:
+        try:
+            if uvb.interpolation_function is None:
+                uvb.interpolation_function = "az_za_simple"
+        except:
             uvb.interpolation_function = "az_za_simple"
-        if uvb.freq_interp_kind is None:
+        try:
+            if uvb.freq_interp_kind is None:
+                uvb.freq_interp_kind = "linear"
+        except:
             uvb.freq_interp_kind = "linear"
         return uvb
     elif beam_cfg["type"] == "sparse":

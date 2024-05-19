@@ -16,10 +16,11 @@ def strip_header(fname):
     return f
 
 
-dB_to_lin = lambda db: 10**(db/10)
+dB_to_lin = lambda vals: 10**(vals/10)
+no_change = lambda vals: vals
 
 # amp in dB and phase in degree
-polar_to_re_im = lambda amp, phase: dB_to_lin(amp)*(np.cos(np.deg2rad(phase))+np.sin(np.deg2rad(phase))*1j)
+polar_to_re_im = lambda f, amp, phase: f(amp)*(np.cos(np.deg2rad(phase))+np.sin(np.deg2rad(phase))*1j)
 
 with open('beams.yaml', 'r') as file:
     beams = yaml.safe_load(file)
@@ -34,15 +35,20 @@ print("Peak at", values_file[im])
 za = np.deg2rad(np.sort(np.unique(values_file[:, 0])))
 az = np.deg2rad(np.sort(np.unique(values_file[:, 1])))
 
+scale = no_change
+if "dB" in build_config and build_config["dB"]:
+    scale = dB_to_lin
+
 # Build values for 2 Naxes_vec and 1 pol and 1 freq
 values = np.zeros((2, 1, za.size, az.size), dtype=complex)      # (Naxes_vec, 1, Nfeeds or Npols, Nfreqs, Naxes2, Naxes1)
 for i in range(values_file.shape[0]):
     _za = int(values_file[i, 0])
     _az = int(values_file[i, 1])
-    E_za = polar_to_re_im(values_file[i, 2], values_file[i, 4])
-    E_az = polar_to_re_im(values_file[i, 3], values_file[i, 5])
+    E_za = polar_to_re_im(scale, values_file[i, 2], values_file[i, 4])
+    E_az = polar_to_re_im(scale, values_file[i, 3], values_file[i, 5])
     values[0, 0, _za//5, _az//5] = E_az
     values[1, 0, _za//5, _az//5] = E_za
+    
 
 
 # Need a basis vector array
