@@ -23,6 +23,18 @@ rhino1:
         az_file: matlab_horn_351MHz_rot_az.dat
         za_file: matlab_horn_351MHz_rot_za.dat
 
+rhino0:
+    type: uvbeam
+    file: rhino0_matlab1.beamfits
+    build_config:                # for process_matlab.py, not used by notebooks
+        freq_start: 60000000
+        freq_end: 88000000
+        nfreq: 280
+        values_file: matlab_horn_351MHz.dat
+        az_file: matlab_horn_351MHz_az.dat
+        za_file: matlab_horn_351MHz_za.dat
+
+
 example_uan:
     type: uvbeam
     file: example_uan.beamfits

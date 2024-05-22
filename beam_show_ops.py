@@ -2,6 +2,7 @@ import numpy as np
 from pyuvdata import UVBeam
 import pyuvsim
 from sparse_beam import sparse_beam, sim_sparse_beam
+from scipy.interpolate import griddata
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
 
@@ -224,6 +225,102 @@ def load_beam(beam_cfg, convert_sparse_to_sim_sparse=False, interp_freq_array=No
             return pyuvsim.AnalyticBeam(beam_cfg["name"], **beam_cfg["params"])
         else:
             return pyuvsim.AnalyticBeam(beam_cfg["name"])
+        
     
+def rotate_beam(beam, angle=-90, axis="x"):
+    """
+    Rotate a UVBeam and return a new one. The angle is in degrees and the
+    rotation axis has to be specified as x, y, z, how this relates to az/za
+    is undefined, you need to experiment.
+    """
+
+    def rotate(X, theta, axis='x'):
+      '''Rotate multidimensional array `X` `theta` radians around axis `axis`'''
+      c, s = np.cos(theta), np.sin(theta)
+      if axis == 'x': return np.dot(X, np.array([
+        [1.,  0,  0],
+        [0 ,  c, -s],
+        [0 ,  s,  c]
+      ]))
+      elif axis == 'y': return np.dot(X, np.array([
+        [c,  0,  -s],
+        [0,  1,   0],
+        [s,  0,   c]
+      ]))
+      elif axis == 'z': return np.dot(X, np.array([
+        [c, -s,  0 ],
+        [s,  c,  0 ],
+        [0,  0,  1.],
+      ]))
+
+    def to_xyz(az, za):
+
+        r = np.sin(za)
+        x = r*np.sin(az)
+        y = r*np.cos(az)  
+        z = np.cos(za)
+
+        return [x, y, z]
+
+    def to_az_za(xyz):
+        za = np.arccos(xyz[2])
+        az = np.arctan2(xyz[0], xyz[1])
+        return [az, za]
+
+    def find_index(a, val):
+        assert np.min(a) <= val and val <= np.max(a), str(val)+" outside of range "+str(np.min(a))+" - "+str(np.max(a))
+        return np.argmin(np.abs(a-val))
+
+    uvb = beam.copy()
+    az = uvb.axis1_array
+    za = uvb.axis2_array
+    assert np.min(az) >= 0, "Rotate won't work if there are negative az"
+    assert np.min(za) >= 0, "Rotate won't work if there are negative za"
+
+
+    all_az = []
+    all_za = []
+    all_values = []
+    # Convert the values
+    rotate_theta = np.deg2rad(angle)
+    for i in range(len(az)):
+        for j in range(len(za)):
+
+            v = to_xyz(az[i], za[j])
+            v = rotate(v, rotate_theta, axis=axis)
+            az_za = to_az_za(v)
+
+            # Wrap angles so they are positive
+            new_az = az_za[0]
+            if new_az < 0: new_az += 2*np.pi
+            new_za = az_za[1] 
+            if new_za < 0: new_za += 2*np.pi
+
+            all_az.append(new_az)
+            all_za.append(new_za)
+
+            all_values.append(uvb.data_array[0, 0, 0, 0, j, i])
+            
+    rot_az_za = np.column_stack((np.array(all_az), np.array(all_za)))
+            
+    xi_az = np.tile(az, za.size)
+    xi_za = np.repeat(za, az.size)
+    xi = np.column_stack((xi_az, xi_za))
+
+    interpolated_power = griddata(rot_az_za, np.array(all_values), xi, method="nearest")
+
+    # Put into data_array
+    uvb_data_array = np.zeros_like(uvb.data_array)
+    weights = np.zeros_like(uvb.data_array)
+    for i in range(xi.shape[0]):
+        az_index = find_index(az, xi[i, 0])
+        za_index = find_index(za, xi[i, 1])
+        uvb_data_array[0, 0, 0, 0, za_index, az_index] += interpolated_power[i]
+        weights[0, 0, 0, 0, za_index, az_index] += 1
+
+    uvb_data_array = np.where(weights==0, uvb_data_array, uvb_data_array/weights)
+    uvb.data_array = uvb_data_array
+    
+    return uvb
     
         
