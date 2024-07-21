@@ -2,8 +2,21 @@ import numpy as np
 from pyuvdata import UVBeam
 import yaml, sys
 
+# Funcs for dB conversion or not, and how
 dB_to_lin = lambda db: 10**(db/10)
+convert_dB = lambda cfg: "dB" in cfg and cfg["dB"]
 
+def load_and_check(fname, _az, _za, do_convert_dB):
+    '''
+    Load a matlab file of values and check that the size is right.
+    '''
+    data = np.loadtxt(fname)
+    assert data.shape[0] == _za.size and data.shape[1] == _az.size, "data and axes don't match az/za in size"
+    
+    if do_convert_dB:
+        data = dB_to_lin(data)
+
+    return data
 
 with open('beams.yaml', 'r') as file:
     beams = yaml.safe_load(file)
@@ -16,30 +29,52 @@ with open(build_config["az_file"], "r") as f:
 with open(build_config["za_file"], "r") as f:
     za = np.deg2rad(np.array(f.readline()[:-1].split(","), dtype=float))
 
-values = np.loadtxt(build_config["values_file"])
+if "values_by_freq_list" in build_config:
+    if "nfreq" in build_config or "freq_start" in build_config or "freq_end" in build_config:
+        print("Overriding frequency spec with frequencies in", build_config["values_by_freq_list"])
+        
+    import csv, os
+    with open(build_config["values_by_freq_list"], 'r') as file:
+        reader = csv.reader(file)        
+        files_by_freq = [ row for row in reader ]
 
-assert values.shape[0] == za.size and values.shape[1] == az.size, "data and axes don't match in size"
+    # Checks and reformat
+    for i in range(len(files_by_freq)):
+        try:
+            files_by_freq[i][0] = float(files_by_freq[i][0])
+        except:
+            raise ValueError("Frequency is not a float: "+files_by_freq[i][0])
 
-if "dB" in build_config and build_config["dB"]:
-    values = dB_to_lin(values)
+        assert os.path.exists(files_by_freq[i][1]), "File does not exist: "+files_by_freq[i][1]
+    
+    nfreq = len(files_by_freq)
+    freqs = np.array([[ row[0] for row in files_by_freq ]])
+    
+else:
+    files_by_freq = None
+    nfreq = build_config["nfreq"]
+    freqs = np.array([np.linspace(build_config["freq_start"], build_config["freq_end"], build_config["nfreq"])])
+    values = load_and_check(build_config["values_file"], az, za, convert_dB(build_config))
+    
 
 # Now start filling the UVBeam
 
 uvb = UVBeam()
 
 uvb.Naxes_vec = 1
-uvb.Nfreqs = build_config["nfreq"]
+uvb.Nfreqs = nfreq
 uvb.antenna_type = "simple"
-uvb.bandpass_array = np.array([np.ones(build_config["nfreq"])])
+uvb.bandpass_array = np.array([np.ones(nfreq)])
 uvb.beam_type = "power"
-uvb.data_array = np.zeros((1, 1, 2, build_config["nfreq"], za.size, az.size))      # (Naxes_vec, 1, Nfeeds or Npols, Nfreqs, Naxes2, Naxes1)
-for i in range(build_config["nfreq"]):
-    uvb.data_array[0, 0, 0, i] = values
-    uvb.data_array[0, 0, 1, i] = values
+uvb.data_array = np.zeros((1, 1, 2, nfreq, za.size, az.size))      # (Naxes_vec, 1, Nfeeds or Npols, Nfreqs, Naxes2, Naxes1)
+for i in range(nfreq):
+    uvb.data_array[0, 0, 0, i] = values if files_by_freq is None else \
+                                    load_and_check(files_by_freq[i][1], az, za, convert_dB(build_config))
+    uvb.data_array[0, 0, 1, i] = uvb.data_array[0, 0, 0, i]
 uvb.data_normalization = "physical"
 uvb.feed_name = "RHINO"
 uvb.feed_version = "1.0"
-uvb.freq_array = np.array([np.linspace(build_config["freq_start"], build_config["freq_end"], build_config["nfreq"])])
+uvb.freq_array = freqs
 uvb.future_array_shapes = False     # Had trouble with True, it still seems to expect the old shape for bandpass_array
 uvb.history = "Created by make_power_beam.py "+sys.argv[1]
 uvb.model_name = "Unknown"
