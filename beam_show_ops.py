@@ -3,6 +3,7 @@ from pyuvdata import UVBeam
 import pyuvsim
 from sparse_beam import sparse_beam, sim_sparse_beam
 from scipy.interpolate import griddata
+from scipy.interpolate import LinearNDInterpolator
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
 
@@ -106,48 +107,55 @@ def plot_beam(beam, freq, name, feed=0, save_to=None):
         A file name to save the plot to.
 
     """
-    
+    dB = lambda x: 10*np.log10(x)
     to_power = lambda b : b[0]*np.conj(b[0])+b[1]*np.conj(b[1])
                
     beam.peak_normalize()
-    
-    _az = np.linspace(0., 2.*np.pi, 360)
-    _za = np.linspace(0., 0.5*np.pi, 90)
+
+    try:
+        _az = uvb.axis1_array
+        _za = uvb.axis2_array
+
+        _az = _az[az<np.deg2rad(360)]
+        _za = _za[za<=np.deg2rad(90)]
+    except:
+        _az = np.linspace(0., 2.*np.pi, 360//5)
+        _za = np.linspace(0., 0.5*np.pi, 90//5)
+
     az, za = np.meshgrid(_az, _za)
     az = az.flatten()
     za = za.flatten()
 
     interp_beam = beam.interp(az_array=az, za_array=za, freq_array=np.array([freq]))[0]
+
     if beam.beam_type == "efield": 
+
             interp_beam = interp_beam[:, 0, feed, 0]
             interp_beam = to_power(interp_beam)
     else:
         interp_beam = interp_beam[0, 0, feed, 0]
-        
-    #print(interp_beam[10000:10003])
+
+    # interp_beam is now a power beam
     
     r = np.sin(za)
     x = r*np.sin(az)
     y = r*np.cos(az)  
 
-    grid_dim = 64
+    grid_dim = 84
 
-    # convert the x/y points to a grid location. x/y can be -1 to 1
-    gi = np.round(np.interp(x, [-1, 1], [0, grid_dim-1])).astype(int)
-    gj = np.round(np.interp(y, [-1, 1], [0, grid_dim-1])).astype(int)
+    X = np.linspace(-1, 1, num=grid_dim)
+    Y = np.linspace(-1, 1, num=grid_dim)
 
-    # Insert beam values into grid and weight
-    grid = np.zeros((grid_dim, grid_dim), dtype=complex)
-    np.add.at(grid, (gi, gj), interp_beam)
-    weights = np.zeros((grid_dim, grid_dim))
-    np.add.at(weights, (gi, gj), 1)
+    X, Y = np.meshgrid(X, Y)  # 2D grid for interpolation
+    interp = LinearNDInterpolator(list(zip(x, y)), interp_beam)
 
-    grid /= weights
+    grid = dB(interp(X, Y).T) 
+    
 
     #ax = plt.axes()
     #ax.remove()           # Causes problem in subplots
 
-    im=plt.imshow(np.abs(grid), interpolation="quadric", norm=LogNorm(), cmap="rainbow")
+    im=plt.imshow(grid, interpolation="quadric", cmap="rainbow")
     plt.xticks([])
     plt.yticks([])
 
@@ -162,7 +170,8 @@ def plot_beam(beam, freq, name, feed=0, save_to=None):
             plt.scatter(x, y, s=0.01, c='w', marker='o')
     
 
-    plt.colorbar(im,fraction=0.04, pad=0.04)
+    cbar = plt.colorbar(im,fraction=0.04, pad=0.04)
+    cbar.set_label("Beam power [dB]")
     plt.title(name)
 
     for pos in ['right', 'top', 'bottom', 'left']: 
@@ -584,7 +593,6 @@ def rotate_beam(beam, angle=-90, axis="x"):
     assert np.min(az) >= 0, "Rotate won't work if there are negative az"
     assert np.min(za) >= 0, "Rotate won't work if there are negative za"
 
-
     all_az = []
     all_za = []
     all_values = []
@@ -631,3 +639,8 @@ def rotate_beam(beam, angle=-90, axis="x"):
     return uvb
     
         
+if __name__ == '__main__':
+    import yaml
+    with open('beams.yaml', 'r') as file:
+        beams = yaml.safe_load(file)
+    plot_beam(load_beam(beams["genetis_6475"]), 75000000, name="test", save_to="/tmp/g")
