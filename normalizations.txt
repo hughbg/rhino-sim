@@ -1,0 +1,11 @@
+A couple of things arising from the last meeting:
+
+It appears that the beam correction factor code is effectively doing a normalization of the beams (at different frequencies). I've played around with rescaling the beams by random factors and it has no effect on the correction factor. I think the effective normalization is coming from this line:
+
+        # Populate BCF value in array
+        bcf[i] = (sky_times_beam_integ / sky_times_beam_integ_ref) \
+                * (beam_integ_ref / beam_integ)
+
+because you have sky_times_beam_integ/beam_integ and beam_integ_ref/sky_times_beam_integ_ref. Anyway, let me know if you find the same.
+
+Regarding simulations of the sky, the beams at different frequencies should be normalized (as Julie said I think). At least when doing simulations that don't involve any electronics or antenna properties. What's most important is that the sky brightness is replicated. If there is a point source being observed through the peak of the beam, and the source intensity is I, then I want the simulation to record the intensity as I. At a different frequency, whatever source is in the peak of the beam (it might shift), I want the intensity I specified at that frequency for that source to be recorded. 
